@@ -3,6 +3,7 @@ package com.david.eudecido.screens.proposals
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.david.eudecido.data.ProposalRepository
+import com.david.eudecido.data.SessionManager
 import com.david.eudecido.data.SyncRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -35,10 +36,9 @@ class CreateProposalScreenModel(
         screenModelScope.launch {
             try {
                 val proposalId = "p_" + Clock.System.now().toEpochMilliseconds().toString()
-                val userId = "current_user" // No futuro virá do Auth
-                val territoryId = "t1" // No futuro virá do perfil do utilizador
+                val userId = SessionManager.currentUserId
+                val territoryId = "t1"
 
-                // 1. Guardar localmente (Cache Camada 2)
                 proposalRepository.createProposal(
                     id = proposalId,
                     userId = userId,
@@ -48,7 +48,6 @@ class CreateProposalScreenModel(
                     status = "DISCUSSION"
                 )
 
-                // 2. Adicionar à fila de sincronização para o Backend (Offline-First)
                 val payload = """
                     {
                         "id": "$proposalId",

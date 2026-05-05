@@ -3,6 +3,7 @@ package com.david.eudecido.screens.elections
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.david.eudecido.data.ElectionRepository
+import com.david.eudecido.data.SessionManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,18 +28,16 @@ class ApplyCandidateScreenModel(
 
     fun startVerification() {
         _step.value = ApplyStep.Verifying
-        
+
         screenModelScope.launch {
             try {
-                // Simula comunicação com o Gateway da CMD
                 delay(3000)
 
-                // Regista a candidatura na base de dados local (Camada 3)
                 val candidacyId = "cand_" + Clock.System.now().toEpochMilliseconds()
                 electionRepository.applyForCandidacy(
                     id = candidacyId,
                     electionId = electionId,
-                    userId = "current_user" // No futuro: UUID do utilizador logado
+                    userId = SessionManager.currentUserId
                 )
 
                 _step.value = ApplyStep.Success

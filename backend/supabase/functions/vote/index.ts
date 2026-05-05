@@ -10,7 +10,6 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Tratar requisições OPTIONS (CORS)
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -18,27 +17,35 @@ serve(async (req) => {
   try {
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '' // Usa service_role para bypassar RLS interno
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // 1. Obter dados do body
     const { proposal_id, vote_value, token_hash } = await req.json()
 
-    // 2. Verificar se o token é válido e não foi usado
-    const { data: tokenData, error: tokenError } = await supabase
+    if (!proposal_id || !vote_value || !token_hash) {
+      throw new Error("Parâmetros em falta: proposal_id, vote_value e token_hash são obrigatórios.")
+    }
+
+    // PASSO 1: QUEIMAR O TOKEN ATOMICAMENTE
+    // Fazemos o update com a condição used=false numa única operação.
+    // Se dois pedidos chegarem ao mesmo tempo, apenas um conseguirá
+    // mudar used de false para true — o outro receberá 0 linhas.
+    const { data: burnedToken, error: burnError } = await supabase
       .from('voting_tokens')
-      .select('*')
+      .update({ used: true })
       .eq('token_hash', token_hash)
       .eq('proposal_id', proposal_id)
       .eq('used', false)
+      .select('id')
       .single()
 
-    if (tokenError || !tokenData) {
+    if (burnError || !burnedToken) {
       throw new Error("Token de votação inválido ou já utilizado.")
     }
 
-    // 3. REGISTO DO VOTO (ANÓNIMO)
-    // Inserimos na tabela 'votes' apenas com o hash do token, NUNCA com o user_id
+    // PASSO 2: REGISTAR O VOTO (ANÓNIMO)
+    // O token já está queimado. Inserimos o voto apenas com o hash,
+    // NUNCA com o user_id, garantindo o anonimato.
     const { error: voteError } = await supabase
       .from('votes')
       .insert({
@@ -48,13 +55,6 @@ serve(async (req) => {
       })
 
     if (voteError) throw voteError
-
-    // 4. QUEIMAR O TOKEN
-    // Marcamos como usado para que o mesmo hash não possa votar outra vez
-    await supabase
-      .from('voting_tokens')
-      .update({ used: true })
-      .eq('id', tokenData.id)
 
     return new Response(JSON.stringify({ message: "Voto registado com sucesso e anonimizado." }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

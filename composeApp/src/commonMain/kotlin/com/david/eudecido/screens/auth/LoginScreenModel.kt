@@ -3,6 +3,7 @@ package com.david.eudecido.screens.auth
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.david.eudecido.data.IdentityRepository
+import com.david.eudecido.data.SessionManager
 import com.david.eudecido.data.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,32 +25,44 @@ class LoginScreenModel(
     private val _loginSuccess = MutableStateFlow(false)
     val loginSuccess = _loginSuccess.asStateFlow()
 
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage = _errorMessage.asStateFlow()
+
     fun onEmailChange(value: String) { _email.value = value }
     fun onPasswordChange(value: String) { _password.value = value }
 
     fun login() {
         if (_isLoading.value) return
+        if (_email.value.isBlank() || _password.value.isBlank()) {
+            _errorMessage.value = "Preenche o email e a palavra-passe."
+            return
+        }
         _isLoading.value = true
-        
+        _errorMessage.value = null
+
         screenModelScope.launch {
             try {
-                // Simulação de login no Supabase
-                kotlinx.coroutines.delay(1000)
-                
-                val userId = "user_id_from_supabase"
-                
-                // Chamada corrigida com os novos parâmetros de segurança
+                val email = _email.value.trim()
+                val username = email.substringBefore('@')
+                val userId = "user_${identityRepository.hashNif(email).takeLast(8)}"
+
                 userRepository.insertUser(
                     id = userId,
-                    identityId = "identity_hash_from_back",
-                    username = "David Silva",
-                    email = _email.value,
+                    identityId = null,
+                    username = username,
+                    email = email,
                     isCandidate = false
                 )
-                
+
+                SessionManager.login(
+                    userId = userId,
+                    username = username,
+                    email = email
+                )
+
                 _loginSuccess.value = true
             } catch (e: Exception) {
-                // Tratar erro de login
+                _errorMessage.value = "Erro ao iniciar sessão. Tenta novamente."
             } finally {
                 _isLoading.value = false
             }

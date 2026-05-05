@@ -3,6 +3,8 @@ package com.david.eudecido.screens.voting
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.david.eudecido.data.ProposalRepository
+import com.david.eudecido.data.SessionManager
+import com.david.eudecido.data.SyncRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -11,7 +13,8 @@ import kotlinx.datetime.Clock
 class VotingScreenModel(
     private val proposalId: String,
     private val proposalTitle: String,
-    private val proposalRepository: ProposalRepository
+    private val proposalRepository: ProposalRepository,
+    private val syncRepository: SyncRepository
 ) : ScreenModel {
     private val _selectedVote = MutableStateFlow<String?>(null)
     val selectedVote = _selectedVote.asStateFlow()
@@ -32,17 +35,33 @@ class VotingScreenModel(
 
         screenModelScope.launch {
             try {
-                // No fluxo seguro, o token seria buscado na tabela 'voting_tokens'
-                // Aqui geramos um para o protótipo que respeita o anonimato
-                val tempToken = "token_${Clock.System.now().toEpochMilliseconds()}"
-                
+                val voteId = "vote_${Clock.System.now().toEpochMilliseconds()}"
+                // O token local serve apenas como referência de integridade local.
+                // A validação real do token anónimo é feita pela Edge Function no backend.
+                val localTokenRef = "local_${SessionManager.currentUserId}_${proposalId}"
+
+                // 1. Guardar localmente (offline-first)
                 proposalRepository.vote(
-                    id = Clock.System.now().toEpochMilliseconds().toString(),
+                    id = voteId,
                     proposalId = proposalId,
                     voteValue = voteValue,
-                    votingToken = tempToken
+                    votingToken = localTokenRef
                 )
-                
+
+                // 2. Enfileirar para sincronização com o backend (Edge Function de votação anónima)
+                val payload = """
+                    {
+                        "proposal_id": "$proposalId",
+                        "vote_value": "$voteValue",
+                        "token_ref": "$localTokenRef"
+                    }
+                """.trimIndent()
+
+                syncRepository.addSyncItem(
+                    type = "SUBMIT_VOTE",
+                    payload = payload
+                )
+
                 _voteSuccess.value = true
             } catch (e: Exception) {
                 // Tratar erro

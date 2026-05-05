@@ -23,7 +23,6 @@ serve(async (req) => {
     let results = {}
 
     if (proposal_id) {
-      // Cálculo para Propostas (SIM/NAO/ABSTENCAO)
       const { data, error } = await supabase
         .from('votes')
         .select('vote_value')
@@ -36,17 +35,23 @@ serve(async (req) => {
       const no = data.filter(v => v.vote_value === 'NAO').length
       const abs = data.filter(v => v.vote_value === 'ABSTENCAO').length
 
+      // Calculamos yes e no normalmente; abstencao recebe o resto para que
+      // a soma seja sempre exactamente 100 quando total > 0.
+      const yesPercent = total > 0 ? Math.round((yes / total) * 100) : 0
+      const noPercent = total > 0 ? Math.round((no / total) * 100) : 0
+      const absPercent = total > 0 ? 100 - yesPercent - noPercent : 0
+
       results = {
         type: 'PROPOSAL',
         total,
         stats: { yes, no, abstention: abs },
         percentage: {
-          yes: total > 0 ? Math.round((yes / total) * 100) : 0,
-          no: total > 0 ? Math.round((no / total) * 100) : 0
+          yes: yesPercent,
+          no: noPercent,
+          abstention: absPercent
         }
       }
     } else if (election_id) {
-      // Cálculo para Eleições (Votos por Candidato)
       const { data, error } = await supabase
         .from('votes')
         .select('vote_value')
@@ -64,6 +69,8 @@ serve(async (req) => {
         total: data.length,
         candidates: counts
       }
+    } else {
+      throw new Error("É necessário fornecer proposal_id ou election_id.")
     }
 
     return new Response(JSON.stringify(results), {
