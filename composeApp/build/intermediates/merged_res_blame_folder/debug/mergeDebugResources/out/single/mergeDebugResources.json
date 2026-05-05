@@ -1,0 +1,22 @@
+[
+    {
+        "merged": "com.david.eudecido.composeApp-debug-54:/drawable_ic_launcher_foreground.xml.flat",
+        "source": "com.david.eudecido.composeApp-androidMain-56:/drawable/ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "com.david.eudecido.composeApp-debug-54:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "com.david.eudecido.composeApp-androidMain-56:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "com.david.eudecido.composeApp-debug-54:/drawable_round_icon_eudecido.png.flat",
+        "source": "com.david.eudecido.composeApp-androidMain-56:/drawable/round_icon_eudecido.png"
+    },
+    {
+        "merged": "com.david.eudecido.composeApp-debug-54:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "com.david.eudecido.composeApp-androidMain-56:/mipmap-anydpi-v26/ic_launcher_round.xml"
+    },
+    {
+        "merged": "com.david.eudecido.composeApp-debug-54:/drawable_icon_eudecido.png.flat",
+        "source": "com.david.eudecido.composeApp-androidMain-56:/drawable/icon_eudecido.png"
+    }
+]

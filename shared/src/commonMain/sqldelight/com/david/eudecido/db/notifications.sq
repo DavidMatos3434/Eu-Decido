@@ -1,0 +1,19 @@
+-- Módulo de Notificações conforme esquema do David
+
+CREATE TABLE notifications (
+    id TEXT NOT NULL PRIMARY KEY,
+    title TEXT NOT NULL,
+    message TEXT NOT NULL,
+    is_read INTEGER NOT NULL DEFAULT 0, -- 0: False, 1: True
+    created_at TEXT NOT NULL
+);
+
+insertNotification:
+INSERT INTO notifications(id, title, message, is_read, created_at) 
+VALUES (?, ?, ?, ?, ?);
+
+selectAllNotifications:
+SELECT * FROM notifications ORDER BY created_at DESC;
+
+markAsRead:
+UPDATE notifications SET is_read = 1 WHERE id = ?;

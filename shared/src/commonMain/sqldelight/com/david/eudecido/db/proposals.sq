@@ -1,0 +1,93 @@
+-- Módulo de Propostas, Votos (Anónimos) e Sync Queue
+
+CREATE TABLE proposals (
+    id TEXT NOT NULL PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    territory_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    "status" TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+
+CREATE TABLE comments (
+    id TEXT NOT NULL PRIMARY KEY,
+    proposal_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    content TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+
+CREATE TABLE votes (
+    id TEXT NOT NULL PRIMARY KEY,
+    proposal_id TEXT NOT NULL,
+    vote_value TEXT NOT NULL,
+    voting_token TEXT NOT NULL UNIQUE,
+    created_at TEXT NOT NULL
+);
+
+CREATE TABLE voting_tokens (
+    id TEXT NOT NULL PRIMARY KEY,
+    identity_id TEXT NOT NULL,
+    proposal_id TEXT NOT NULL,
+    token_hash TEXT NOT NULL UNIQUE,
+    "used" INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL
+);
+
+CREATE TABLE sync_queue (
+    id TEXT NOT NULL PRIMARY KEY,
+    "type" TEXT NOT NULL,
+    payload TEXT NOT NULL,
+    "status" TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+
+-- Queries
+getAllProposals:
+SELECT * FROM proposals ORDER BY created_at DESC;
+
+getProposalById:
+SELECT * FROM proposals WHERE id = ?;
+
+insertProposal:
+INSERT OR REPLACE INTO proposals(id, user_id, territory_id, title, description, "status", created_at)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
+getCommentsByProposal:
+SELECT * FROM comments WHERE proposal_id = ?;
+
+insertComment:
+INSERT OR REPLACE INTO comments(id, proposal_id, user_id, content, created_at)
+VALUES (?, ?, ?, ?, ?);
+
+insertVote:
+INSERT INTO votes(id, proposal_id, vote_value, voting_token, created_at)
+VALUES (?, ?, ?, ?, ?);
+
+-- Estatísticas com alias seguro 'n_votes'
+countVotesByValue:
+SELECT vote_value, COUNT(*) AS n_votes
+FROM votes 
+WHERE proposal_id = ? 
+GROUP BY vote_value;
+
+countTotalVotes:
+SELECT COUNT(*) FROM votes WHERE proposal_id = ?;
+
+insertVotingToken:
+INSERT INTO voting_tokens(id, identity_id, proposal_id, token_hash, "used", created_at)
+VALUES (?, ?, ?, ?, ?, ?);
+
+markTokenAsUsed:
+UPDATE voting_tokens SET "used" = 1 WHERE token_hash = ?;
+
+getPendingSyncItems:
+SELECT * FROM sync_queue WHERE "status" = 'PENDING' ORDER BY created_at ASC;
+
+updateSyncStatus:
+UPDATE sync_queue SET "status" = ? WHERE id = ?;
+
+insertSyncItem:
+INSERT INTO sync_queue(id, "type", payload, "status", created_at)
+VALUES (?, ?, ?, ?, ?);
