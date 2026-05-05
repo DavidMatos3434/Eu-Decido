@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 
 from server.core.database import close_pool, get_pool
 from server.routers import (
+    agents,
     auth,
     comments,
     elections,
@@ -50,6 +51,7 @@ app.include_router(territories.router)
 app.include_router(representatives.router)
 app.include_router(notifications.router)
 app.include_router(identity.router)
+app.include_router(agents.router)
 
 
 @app.get("/", tags=["Estado"])

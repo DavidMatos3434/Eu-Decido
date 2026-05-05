@@ -57,6 +57,68 @@ backend/
 docs/              → Documentação técnica
 ```
 
+## Motor de Agentes — Fase 1
+
+### Arquitectura
+```
+Evento (nova proposta / comentário)
+       │
+       ▼
+Orquestrador (server/agents/orchestrator.py)
+  — roteamento determinístico por tipo de evento
+  — nunca usa LLM para decidir qual agente chamar
+       │
+       ├─ 1. Agente de Moderação (SEMPRE primeiro, SÍNCRONO)
+       │       → único que pode BLOQUEAR
+       │       → filtro de padrões (sem LLM) + análise LLM para casos ambíguos
+       │       → fail-open: se LLM indisponível, aprova automaticamente
+       │
+       └─ 2. Agentes de Enriquecimento (PARALELOS, nunca bloqueiam)
+               ├─ Agente de Propostas → score, tema, sugestões, melhorias
+               └─ Agente de Resumo    → TLDR, técnico, impacto local, acessível
+```
+
+### Configuração do LLM (variáveis de ambiente)
+| Variável | Valores | Default |
+|----------|---------|---------|
+| `LLM_PROVIDER` | `ollama` \| `mistral` \| `openai` | `ollama` |
+| `LLM_BASE_URL` | URL da API | `http://localhost:11434/v1` |
+| `LLM_MODEL` | nome do modelo | `mistral` |
+| `MISTRAL_API_KEY` | chave Mistral AI | — |
+| `OPENAI_API_KEY` | chave OpenAI | — |
+| `LLM_TIMEOUT` | segundos | `60` |
+
+**Para usar Mistral API:**
+```
+LLM_PROVIDER=mistral
+MISTRAL_API_KEY=<chave>
+LLM_MODEL=mistral-small-latest
+```
+
+**Para usar Ollama local (servidor próprio):**
+```
+LLM_PROVIDER=ollama
+LLM_BASE_URL=http://<ip-servidor>:11434/v1
+LLM_MODEL=mistral
+```
+
+### Princípio fundamental dos agentes de supervisão
+> **"Informar e contextualizar, nunca censurar — excepto conteúdo claramente ilegal."**
+- Agente de Moderação: único que bloqueia (insultos, ódio, ameaças)
+- Todos os outros: adicionam avisos/contexto, NUNCA bloqueiam propostas
+
+### Endpoints dos Agentes
+| Método | Path | Descrição |
+|--------|------|-----------|
+| GET | /agents/status | Estado do sistema + LLM online/offline |
+| POST | /agents/analyze | Analisa texto (sem persistência) |
+| POST | /agents/comment/moderate | Modera comentário antes de publicar |
+| POST | /agents/proposal/{id}/analyze | Analisa proposta + guarda auditoria |
+| GET | /agents/proposal/{id}/history | Histórico completo de decisões dos agentes |
+
+### Tabela de Auditoria
+`agent_results` — registo de todas as decisões de todos os agentes, com JSON completo de input/output, para transparência total e auditabilidade.
+
 ## Workflow Replit
 - **Nome**: `EU DECIDO API`
 - **Comando**: `python -m uvicorn server.main:app --host 0.0.0.0 --port 8000 --reload`
