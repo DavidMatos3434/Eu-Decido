@@ -204,28 +204,6 @@ EU DECIDO aims to prioritize:
 
 ---
 
-# Future Regional Federation Vision
-
-## Long-Term Exploration
-
-EU DECIDO may evolve towards a federated civic infrastructure model where:
-- regions maintain operational autonomy,
-- communities retain governance flexibility,
-- and shared democratic protocols enable interoperability.
-
----
-
-# Possible Federation Components
-
-- Regional AI inference nodes
-- Federated governance structures
-- Interconnected civic communities
-- Shared transparency protocols
-- Distributed moderation systems
-- Multi-region participation frameworks
-
----
-
 # Research & Experimental Nature
 
 ⚠️ EU DECIDO is an experimental and evolving civic technology initiative.
