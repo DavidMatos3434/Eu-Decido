@@ -1,4 +1,4 @@
-# EU DECIDO - Sistema de Governação Digital
+# EU DECIDO
 
 Este é um projeto Monorepo que contém a aplicação móvel (KMP) e a infraestrutura de backend (Supabase).
 
