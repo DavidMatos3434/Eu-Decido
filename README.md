@@ -4,6 +4,19 @@ Experimental digital democracy platform powered by open technologies and respons
 
 ---
 
+## Contents
+
+- Vision
+- Core Principles
+- Architecture
+- AI Infrastructure
+- Roadmap
+- Collaboration
+- Documentation
+- Disclaimer
+
+---
+
 ## Vision
 
 EU DECIDO is an experimental civic technology initiative exploring new forms of democratic participation through open technologies, transparent governance mechanisms, and responsible artificial intelligence.
@@ -34,7 +47,7 @@ EU DECIDO combines:
 
 ---
 
-# Current Architecture
+# Architecture
 
 ## Mobile Application
 - Kotlin Multiplatform
@@ -47,8 +60,10 @@ EU DECIDO combines:
 - Supabase
 - JWT authentication
 - Anonymous voting mechanisms
+  
+---
 
-## AI Infrastructure (In Development)
+# AI Infrastructure (In Development)
 - Multi-agent orchestration
 - Compatibility with European open-source models:
   - Mistral
@@ -56,9 +71,7 @@ EU DECIDO combines:
   - Llama
   - Ollama-based deployments
 
----
-
-# Planned AI Agents
+## Planned AI Agents
 
 The platform is evolving towards a specialized multi-agent architecture, including:
 
@@ -73,19 +86,29 @@ The platform is evolving towards a specialized multi-agent architecture, includi
 
 ---
 
-# Current Status
+# Roadmap
 
-⚠️ Experimental / Research Stage
+## Current Status
 
-The project is currently under active development and architectural experimentation.
+### Implemented
 
-Several core systems are already functional, including:
-- mobile infrastructure,
-- backend services,
-- anonymous voting mechanisms,
-- and community participation modules.
+- Mobile infrastructure
+- FastAPI backend
+- Anonymous voting
+- Authentication
+- Proposal system
 
-The AI orchestration layer and governance systems are still under development.
+### In Development
+
+- AI orchestration layer
+- Governance agents
+- Debate systems
+
+### Planned
+
+- Distributed AI infrastructure
+- Advanced governance systems
+- Regional scalability
 
 ---
 
@@ -129,9 +152,18 @@ The source code is publicly accessible for purposes of:
 - research,
 - and public auditability.
 
-At this stage, commercial usage, organized redistribution, or political derivative deployments may require prior authorization from the project maintainers.
+No license has yet been formally assigned to this repository.
 
-A formal licensing structure and governance framework will be defined as the project matures.
+All rights remain reserved by default until an official license is published.
+
+---
+
+## Documentation
+
+- [Architecture](ARCHITECTURE.md)
+- [Roadmap](ROADMAP.md)
+- [Contributing Guide](CONTRIBUTING.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
 
 ---
 

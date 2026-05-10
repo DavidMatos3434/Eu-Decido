@@ -4,12 +4,15 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.david.eudecido.data.ProposalRepository
 import com.david.eudecido.data.VoteStats
+import com.david.eudecido.db.Proposals // Import em falta que causava o erro no .title
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
@@ -37,16 +40,17 @@ class ResultsScreenModel(
         loadResults()
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun loadResults() {
         screenModelScope.launch {
             proposalRepository.getProposal(proposalId)
-                .flatMapLatest { proposal ->
+                .flatMapLatest { proposal: Proposals? -> // Tipo explícito aqui
                     if (proposal != null) {
                         proposalRepository.getVoteStats(proposalId).map { stats ->
-                            calculateResults(proposal.title, stats)
+                            calculateResults(proposal.title, stats) as ResultsState
                         }
                     } else {
-                        flow { emit(ResultsState.Error as ResultsState) }
+                        flowOf(ResultsState.Error as ResultsState) // Cast explícito aqui
                     }
                 }
                 .catch { _state.value = ResultsState.Error }
