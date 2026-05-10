@@ -1,4 +1,4 @@
-# EU DECIDO — Sistema de Governação Digital
+# EU DECIDO 
 
 ## Visão Geral
 Aplicação cívica para governação territorial em Portugal. Permite que cidadãos criem propostas, discutam, votem de forma anónima, candidatem-se a eleições e acompanhem representantes eleitos.
