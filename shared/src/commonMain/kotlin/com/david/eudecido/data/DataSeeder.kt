@@ -26,8 +26,8 @@ class DataSeeder(
     }
 
     private suspend fun seedData() {
-        // Inserir apenas os territórios base necessários para a app funcionar.
-        // Toda a informação de propostas e utilizadores virá agora do Supabase.
+        // Inserir apenas territórios base. 
+        // Propostas, utilizadores e eleições reais virão do Supabase.
         userRepository.addTerritory("00000000-0000-0000-0000-000000000001", "Portugal", "NACIONAL", null)
         userRepository.addTerritory("00000000-0000-0000-0000-000000000002", "Lisboa e Vale do Tejo", "REGIAO", "00000000-0000-0000-0000-000000000001")
         userRepository.addTerritory("00000000-0000-0000-0000-000000000003", "Lisboa", "MUNICIPIO", "00000000-0000-0000-0000-000000000002")
