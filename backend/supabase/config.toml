@@ -27,4 +27,4 @@ file_size_limit = "5MiB"
 
 [edge_runtime]
 enabled = true
-port = 54321
+# port removido pois causa erro no parser do Supabase Cloud
