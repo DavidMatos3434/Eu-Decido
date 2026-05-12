@@ -257,3 +257,5 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER tr_notify_on_comment AFTER INSERT ON comments FOR EACH ROW EXECUTE FUNCTION notify_on_comment();
+
+-- Forçar nova sincronização com Supabase (2024-05-20 22:30)

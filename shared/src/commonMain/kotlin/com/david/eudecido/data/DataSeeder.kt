@@ -5,7 +5,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
 
 class DataSeeder(
     private val userRepository: UserRepository,
@@ -27,60 +26,11 @@ class DataSeeder(
     }
 
     private suspend fun seedData() {
-        // 1. Seed Territories
-        userRepository.addTerritory("t1", "Arroios", "FREGUESIA", "m1")
-        userRepository.addTerritory("t2", "Lisboa", "MUNICIPIO", "r1")
-
-        // 2. Seed User
-        userRepository.insertUser(
-            id = "current_user",
-            identityId = "id_hash_david",
-            username = "David Silva",
-            email = "david@eudecido.pt",
-            isCandidate = false
-        )
-
-        // 3. Seed Proposals
-        proposalRepository.createProposal(
-            id = "p1",
-            userId = "current_user",
-            territoryId = "t1",
-            title = "Nova Ciclovia na Almirante Reis",
-            description = "Proposta para criar uma ciclovia bidirecional segura, separada do tráfego automóvel.",
-            status = "DISCUSSION"
-        )
-        
-        proposalRepository.createProposal(
-            id = "p2",
-            userId = "admin",
-            territoryId = "t1",
-            title = "Horta Comunitária no Bairro",
-            description = "Espaço para cultivo partilhado de vegetais e ervas aromáticas pelos residentes.",
-            status = "VOTING"
-        )
-
-        // 4. Seed Eleições (NOVO)
-        electionRepository.createElection(
-            id = "e1",
-            title = "Eleição para Representante de Freguesia",
-            territoryId = "t1",
-            role = "Delegado Comunitário",
-            status = "OPEN"
-        )
-
-        // 5. Seed Representatives
-        representativeRepository.addRepresentative(
-            id = "r1",
-            userId = "rep_1",
-            territoryId = "t1",
-            role = "Presidente da Junta"
-        )
-
-        // 6. Seed Notificações (Para testar o novo ecrã)
-        notificationRepository.insertNotification(
-            id = "n1",
-            title = "Bem-vindo ao EU DECIDO",
-            message = "Já podes começar a propor e votar nas decisões da tua freguesia."
-        )
+        // Inserir apenas os territórios base necessários para a app funcionar.
+        // Toda a informação de propostas e utilizadores virá agora do Supabase.
+        userRepository.addTerritory("00000000-0000-0000-0000-000000000001", "Portugal", "NACIONAL", null)
+        userRepository.addTerritory("00000000-0000-0000-0000-000000000002", "Lisboa e Vale do Tejo", "REGIAO", "00000000-0000-0000-0000-000000000001")
+        userRepository.addTerritory("00000000-0000-0000-0000-000000000003", "Lisboa", "MUNICIPIO", "00000000-0000-0000-0000-000000000002")
+        userRepository.addTerritory("00000000-0000-0000-0000-000000000004", "Arroios", "FREGUESIA", "00000000-0000-0000-0000-000000000003")
     }
 }
