@@ -18,8 +18,12 @@ class DiscussionScreenModel(
     private val _comments = MutableStateFlow<List<Comment>>(emptyList())
     val comments = _comments.asStateFlow()
 
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing = _isRefreshing.asStateFlow()
+
     init {
         loadComments()
+        refreshComments()
     }
 
     private fun loadComments() {
@@ -28,7 +32,7 @@ class DiscussionScreenModel(
                 _comments.value = dbComments.map { dbComment ->
                     Comment(
                         id = dbComment.id,
-                        author = dbComment.user_id,
+                        author = "Utilizador", // No futuro buscar username via JOIN ou cache
                         text = dbComment.content,
                         likes = 0
                     )
@@ -37,16 +41,26 @@ class DiscussionScreenModel(
         }
     }
 
+    fun refreshComments() {
+        if (_isRefreshing.value) return
+        _isRefreshing.value = true
+        screenModelScope.launch {
+            proposalRepository.syncComments(proposalId)
+            _isRefreshing.value = false
+        }
+    }
+
     fun sendComment(text: String) {
         if (text.isBlank()) return
         screenModelScope.launch {
-            val id = Clock.System.now().toEpochMilliseconds().toString()
+            val id = "c_" + Clock.System.now().toEpochMilliseconds().toString()
             proposalRepository.addComment(
                 id = id,
                 proposalId = proposalId,
                 userId = SessionManager.currentUserId,
                 content = text
             )
+            // A sincronização de saída é gerida pelo SyncManager automaticamente
         }
     }
 }

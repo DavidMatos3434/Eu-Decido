@@ -4,13 +4,13 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.david.eudecido.data.ProposalRepository
 import com.david.eudecido.data.VoteStats
-import com.david.eudecido.db.Proposals // Import em falta que causava o erro no .title
+import com.david.eudecido.db.Proposals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -24,7 +24,8 @@ sealed class ResultsState {
         val yesPercent: Int,
         val noPercent: Int,
         val abstentionPercent: Int,
-        val isApproved: Boolean
+        val isApproved: Boolean,
+        val isGlobal: Boolean = false
     ) : ResultsState()
     object Error : ResultsState()
 }
@@ -43,14 +44,33 @@ class ResultsScreenModel(
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun loadResults() {
         screenModelScope.launch {
+            // 1. Tentar obter resultados globais do servidor
+            proposalRepository.syncResults(proposalId, null)
+                .onSuccess { remoteStats ->
+                    proposalRepository.getProposal(proposalId).collectLatest { proposal ->
+                        if (proposal != null) {
+                            _state.value = calculateResults(proposal.title, remoteStats, isGlobal = true)
+                        }
+                    }
+                }
+                .onFailure {
+                    // 2. Fallback para resultados locais se o servidor estiver offline
+                    loadLocalResults()
+                }
+        }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun loadLocalResults() {
+        screenModelScope.launch {
             proposalRepository.getProposal(proposalId)
-                .flatMapLatest { proposal: Proposals? -> // Tipo explícito aqui
+                .flatMapLatest { proposal: Proposals? ->
                     if (proposal != null) {
                         proposalRepository.getVoteStats(proposalId).map { stats ->
-                            calculateResults(proposal.title, stats) as ResultsState
+                            calculateResults(proposal.title, stats, isGlobal = false) as ResultsState
                         }
                     } else {
-                        flowOf(ResultsState.Error as ResultsState) // Cast explícito aqui
+                        flowOf(ResultsState.Error as ResultsState)
                     }
                 }
                 .catch { _state.value = ResultsState.Error }
@@ -58,7 +78,7 @@ class ResultsScreenModel(
         }
     }
 
-    private fun calculateResults(title: String, stats: VoteStats): ResultsState.Success {
+    private fun calculateResults(title: String, stats: VoteStats, isGlobal: Boolean): ResultsState.Success {
         val total = stats.total
 
         val yesP = if (total > 0) ((stats.yes.toDouble() / total) * 100).toInt() else 0
@@ -71,7 +91,8 @@ class ResultsScreenModel(
             yesPercent = yesP,
             noPercent = noP,
             abstentionPercent = absP,
-            isApproved = yesP > 50
+            isApproved = yesP > 50,
+            isGlobal = isGlobal
         )
     }
 }

@@ -20,6 +20,11 @@ interface ElectionRepository {
     suspend fun applyForCandidacy(
         id: String,
         electionId: String,
-        userId: String
+        userId: String,
+        manifesto: String
     )
+
+    // Sincronização com o backend
+    suspend fun syncElections(): Result<Unit>
+    suspend fun syncCandidacies(electionId: String): Result<Unit>
 }

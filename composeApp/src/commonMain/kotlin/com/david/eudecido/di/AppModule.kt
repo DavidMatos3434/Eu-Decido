@@ -38,7 +38,7 @@ val appModule = module {
     factory { WelcomeScreenModel() }
     factory { HomeScreenModel(get(), get()) }
     factory { RegisterScreenModel(get(), get()) }
-    factory { LoginScreenModel(get(), get()) }
+    factory { LoginScreenModel(get()) }
     factory { CreateProposalScreenModel(get(), get()) }
     factory { RepresentativesScreenModel(get()) }
     factory { NotificationsScreenModel(get()) }
@@ -46,9 +46,8 @@ val appModule = module {
     factory { ProfileScreenModel(get()) }
     factory { DelegationScreenModel() }
     factory { ElectionListScreenModel(get()) }
-    factory { CandidateListScreenModel() }
     factory { TerritorySelectionScreenModel() }
-    factory { ProposalListScreenModel() }
+    factory { ProposalListScreenModel(get()) }
     factory { SearchScreenModel() }
     factory { AIProposalHelperScreenModel() }
     factory { AIAssistantScreenModel() }
@@ -76,6 +75,10 @@ val appModule = module {
 
     factory { (electionId: String) ->
         ApplyCandidateScreenModel(electionId, get())
+    }
+
+    factory { (electionId: String) ->
+        CandidateListScreenModel(electionId, get())
     }
 
     factory { (candidateId: String) ->

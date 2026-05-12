@@ -2,16 +2,16 @@ package com.david.eudecido.screens.auth
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import com.david.eudecido.data.AuthRepository
 import com.david.eudecido.data.IdentityRepository
 import com.david.eudecido.data.SessionManager
-import com.david.eudecido.data.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class RegisterScreenModel(
-    private val identityRepository: IdentityRepository,
-    private val userRepository: UserRepository
+    private val authRepository: AuthRepository,
+    private val identityRepository: IdentityRepository
 ) : ScreenModel {
     private val _name = MutableStateFlow("")
     val name = _name.asStateFlow()
@@ -41,7 +41,7 @@ class RegisterScreenModel(
 
     fun register() {
         if (_isLoading.value) return
-        if (_name.value.isBlank() || _email.value.isBlank() || _nif.value.isBlank()) {
+        if (_name.value.isBlank() || _email.value.isBlank() || _password.value.isBlank()) {
             _errorMessage.value = "Preenche todos os campos obrigatórios."
             return
         }
@@ -50,34 +50,27 @@ class RegisterScreenModel(
 
         screenModelScope.launch {
             try {
-                val nifHash = identityRepository.hashNif(_nif.value)
-                val initialToken = identityRepository.verifyAndRegisterIdentity(nifHash)
-
-                if (initialToken != null) {
-                    val userId = "user_${nifHash.takeLast(8)}"
-                    val username = _name.value.trim()
-                    val email = _email.value.trim()
-
-                    userRepository.insertUser(
-                        id = userId,
-                        identityId = nifHash,
-                        username = username,
-                        email = email,
-                        isCandidate = false
-                    )
-
+                // Se o NIF for fornecido, fazemos o hash antes de enviar
+                val nifHash = if (_nif.value.isNotBlank()) identityRepository.hashNif(_nif.value) else null
+                
+                authRepository.register(
+                    username = _name.value.trim(),
+                    email = _email.value.trim(),
+                    password = _password.value,
+                    nifHash = nifHash
+                ).onSuccess { response ->
                     SessionManager.login(
-                        userId = userId,
-                        username = username,
-                        email = email
+                        userId = response.user_id,
+                        username = response.username,
+                        email = response.email,
+                        token = response.access_token
                     )
-
                     _registrationSuccess.value = true
-                } else {
-                    _errorMessage.value = "Falha na validação de identidade. Verifica o teu NIF."
+                }.onFailure { e ->
+                    _errorMessage.value = "Erro no registo: ${e.message ?: "Tenta novamente"}"
                 }
             } catch (e: Exception) {
-                _errorMessage.value = "Erro no registo. Tenta novamente."
+                _errorMessage.value = "Erro ao processar registo."
             } finally {
                 _isLoading.value = false
             }

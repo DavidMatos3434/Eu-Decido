@@ -39,16 +39,14 @@ class ProfileScreenModel(
                 user?.let {
                     _userName.value = it.username
                     _userEmail.value = it.email ?: ""
-                    _userFreguesia.value = "Arroios"
+                    // No futuro, buscar freguesia real do território associado
+                    _userFreguesia.value = "Pendente" 
                 }
             }
         }
-
-        _activities.value = listOf(
-            UserActivity("Votou na Proposta #12", "Há 2 dias"),
-            UserActivity("Comentou em 'Nova Ciclovia'", "Há 3 dias"),
-            UserActivity("Criou a proposta 'Horta Comunitária'", "Há 1 semana")
-        )
+        
+        // Atividades serão carregadas do backend em fases futuras
+        _activities.value = emptyList()
     }
 
     fun logout() {

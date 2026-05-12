@@ -38,6 +38,19 @@ async def register(body: RegisterRequest, conn=Depends(get_conn)):
     if existing_user:
         raise HTTPException(status_code=400, detail="Nome de utilizador já existe.")
 
+    identity_id = None
+    if body.nif_hash:
+        # Verificar se NIF já existe
+        existing_nif = await conn.fetchrow("SELECT id FROM identity WHERE nif_hash = $1", body.nif_hash)
+        if existing_nif:
+            raise HTTPException(status_code=400, detail="Este NIF já está associado a outra conta.")
+        
+        id_row = await conn.fetchrow(
+            "INSERT INTO identity (nif_hash, verified) VALUES ($1, true) RETURNING id",
+            body.nif_hash
+        )
+        identity_id = id_row["id"]
+
     password_hash = hash_password(body.password)
 
     try:
@@ -50,10 +63,10 @@ async def register(body: RegisterRequest, conn=Depends(get_conn)):
             body.username,
             body.email,
             password_hash,
-            None,
+            identity_id,
         )
     except asyncpg.UniqueViolationError:
-        raise HTTPException(status_code=400, detail="Utilizador já existe.")
+        raise HTTPException(status_code=400, detail="Erro ao criar utilizador.")
 
     token = create_access_token({"sub": str(row["id"])})
     return AuthResponse(

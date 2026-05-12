@@ -4,7 +4,6 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.david.eudecido.data.ElectionRepository
 import com.david.eudecido.data.SessionManager
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,23 +25,31 @@ class ApplyCandidateScreenModel(
     private val _step = MutableStateFlow<ApplyStep>(ApplyStep.Info)
     val step: StateFlow<ApplyStep> = _step.asStateFlow()
 
-    fun startVerification() {
+    private val _manifesto = MutableStateFlow("")
+    val manifesto = _manifesto.asStateFlow()
+
+    fun onManifestoChange(value: String) {
+        _manifesto.value = value
+    }
+
+    fun submitCandidacy() {
+        if (_manifesto.value.isBlank()) return
         _step.value = ApplyStep.Verifying
 
         screenModelScope.launch {
             try {
-                delay(3000)
-
                 val candidacyId = "cand_" + Clock.System.now().toEpochMilliseconds()
+                
                 electionRepository.applyForCandidacy(
                     id = candidacyId,
                     electionId = electionId,
-                    userId = SessionManager.currentUserId
+                    userId = SessionManager.currentUserId,
+                    manifesto = _manifesto.value
                 )
 
                 _step.value = ApplyStep.Success
             } catch (e: Exception) {
-                _step.value = ApplyStep.Error("Falha na verificação de identidade.")
+                _step.value = ApplyStep.Error("Falha ao submeter candidatura. Tenta novamente.")
             }
         }
     }

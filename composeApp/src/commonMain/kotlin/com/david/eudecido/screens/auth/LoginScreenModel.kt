@@ -2,16 +2,14 @@ package com.david.eudecido.screens.auth
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import com.david.eudecido.data.IdentityRepository
+import com.david.eudecido.data.AuthRepository
 import com.david.eudecido.data.SessionManager
-import com.david.eudecido.data.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class LoginScreenModel(
-    private val identityRepository: IdentityRepository,
-    private val userRepository: UserRepository
+    private val authRepository: AuthRepository
 ) : ScreenModel {
     private val _email = MutableStateFlow("")
     val email = _email.asStateFlow()
@@ -41,31 +39,20 @@ class LoginScreenModel(
         _errorMessage.value = null
 
         screenModelScope.launch {
-            try {
-                val email = _email.value.trim()
-                val username = email.substringBefore('@')
-                val userId = "user_${identityRepository.hashNif(email).takeLast(8)}"
-
-                userRepository.insertUser(
-                    id = userId,
-                    identityId = null,
-                    username = username,
-                    email = email,
-                    isCandidate = false
-                )
-
-                SessionManager.login(
-                    userId = userId,
-                    username = username,
-                    email = email
-                )
-
-                _loginSuccess.value = true
-            } catch (e: Exception) {
-                _errorMessage.value = "Erro ao iniciar sessão. Tenta novamente."
-            } finally {
-                _isLoading.value = false
-            }
+            authRepository.login(_email.value.trim(), _password.value)
+                .onSuccess { response ->
+                    SessionManager.login(
+                        userId = response.user_id,
+                        username = response.username,
+                        email = response.email,
+                        token = response.access_token
+                    )
+                    _loginSuccess.value = true
+                }
+                .onFailure { e ->
+                    _errorMessage.value = "Erro ao iniciar sessão: ${e.message ?: "Credenciais incorretas"}"
+                }
+            _isLoading.value = false
         }
     }
 }

@@ -10,7 +10,7 @@ actual class DatabaseDriverFactory(private val context: Context) {
         return AndroidSqliteDriver(
             schema = EuDecidoDatabase.Schema,
             context = context,
-            name = "EuDecidoV3.db"
+            name = "EuDecidoV4.db"
         )
     }
 }

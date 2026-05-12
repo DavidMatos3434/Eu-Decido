@@ -26,20 +26,20 @@ class ProposalDetailScreen(val proposalId: String) : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val screenModel = getScreenModel<ProposalDetailScreenModel> { parametersOf(proposalId) }
 
-        // ✅ Coleta de estados do Flow para valores simples
+        // ✅ Coleta de estados do Flow para valores reais do Model
         val title by screenModel.title.collectAsState()
         val summary by screenModel.summary.collectAsState()
         val description by screenModel.description.collectAsState()
-        val votes by screenModel.votes.collectAsState()
-        val approval by screenModel.approval.collectAsState()
+        val totalVotes by screenModel.totalVotes.collectAsState()
+        val yesPercent by screenModel.yesPercent.collectAsState()
         val selectedVote by screenModel.selectedVote.collectAsState()
 
         ProposalDetailContent(
             title = title,
             summary = summary,
             description = description,
-            approval = approval,
-            votes = votes,
+            approval = yesPercent,
+            votes = totalVotes,
             selectedVote = selectedVote,
             onVoteSelect = screenModel::onVoteSelect,
             onVoteConfirm = {
@@ -70,7 +70,7 @@ fun ProposalDetailContent(
     summary: String,
     description: String,
     approval: Int,
-    votes: Int,
+    votes: Long, // Atualizado para Long para coincidir com a DB
     selectedVote: String?,
     onVoteSelect: (String) -> Unit,
     onVoteConfirm: () -> Unit,

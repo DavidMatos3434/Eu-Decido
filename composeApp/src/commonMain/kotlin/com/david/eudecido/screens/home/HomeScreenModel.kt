@@ -22,9 +22,13 @@ class HomeScreenModel(
     private val _userName = MutableStateFlow(SessionManager.currentUsername)
     val userName: StateFlow<String> = _userName.asStateFlow()
 
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
     init {
         loadProposals()
         loadUserData()
+        refreshData() // Sincronização inicial ao abrir a app
     }
 
     private fun loadProposals() {
@@ -40,7 +44,7 @@ class HomeScreenModel(
                         id = dbProposal.id,
                         title = dbProposal.title,
                         summary = summary,
-                        votes = 0,
+                        votes = 0, // No futuro, buscar das estatísticas
                         approval = 0
                     )
                 }
@@ -53,13 +57,17 @@ class HomeScreenModel(
             userRepository.getUser(SessionManager.currentUserId).collectLatest { user ->
                 user?.let {
                     _userName.value = it.username
-                    SessionManager.login(
-                        userId = it.id,
-                        username = it.username,
-                        email = it.email ?: ""
-                    )
                 }
             }
+        }
+    }
+
+    fun refreshData() {
+        if (_isRefreshing.value) return
+        _isRefreshing.value = true
+        screenModelScope.launch {
+            proposalRepository.syncProposals()
+            _isRefreshing.value = false
         }
     }
 }

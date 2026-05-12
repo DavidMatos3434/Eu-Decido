@@ -2,18 +2,20 @@
 
 CREATE TABLE proposals (
     id TEXT NOT NULL PRIMARY KEY,
-    user_id TEXT NOT NULL,
-    territory_id TEXT NOT NULL,
+    user_id TEXT,
+    territory_id TEXT,
     title TEXT NOT NULL,
     description TEXT NOT NULL,
-    "status" TEXT NOT NULL,
-    created_at TEXT NOT NULL
+    status TEXT NOT NULL,
+    type TEXT NOT NULL DEFAULT 'IDEIA',
+    created_at TEXT NOT NULL,
+    updated_at TEXT
 );
 
 CREATE TABLE comments (
     id TEXT NOT NULL PRIMARY KEY,
     proposal_id TEXT NOT NULL,
-    user_id TEXT NOT NULL,
+    user_id TEXT,
     content TEXT NOT NULL,
     created_at TEXT NOT NULL
 );
@@ -31,15 +33,15 @@ CREATE TABLE voting_tokens (
     identity_id TEXT NOT NULL,
     proposal_id TEXT NOT NULL,
     token_hash TEXT NOT NULL UNIQUE,
-    "used" INTEGER NOT NULL DEFAULT 0,
+    used INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL
 );
 
 CREATE TABLE sync_queue (
     id TEXT NOT NULL PRIMARY KEY,
-    "type" TEXT NOT NULL,
+    type TEXT NOT NULL,
     payload TEXT NOT NULL,
-    "status" TEXT NOT NULL,
+    status TEXT NOT NULL,
     created_at TEXT NOT NULL
 );
 
@@ -51,18 +53,18 @@ getProposalById:
 SELECT * FROM proposals WHERE id = ?;
 
 insertProposal:
-INSERT OR REPLACE INTO proposals(id, user_id, territory_id, title, description, "status", created_at)
-VALUES (?, ?, ?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO proposals(id, user_id, territory_id, title, description, status, type, created_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 
 getCommentsByProposal:
-SELECT * FROM comments WHERE proposal_id = ?;
+SELECT * FROM comments WHERE proposal_id = ? ORDER BY created_at ASC;
 
 insertComment:
 INSERT OR REPLACE INTO comments(id, proposal_id, user_id, content, created_at)
 VALUES (?, ?, ?, ?, ?);
 
 insertVote:
-INSERT INTO votes(id, proposal_id, vote_value, voting_token, created_at)
+INSERT OR REPLACE INTO votes(id, proposal_id, vote_value, voting_token, created_at)
 VALUES (?, ?, ?, ?, ?);
 
 -- Estatísticas com alias seguro 'n_votes'
@@ -76,18 +78,18 @@ countTotalVotes:
 SELECT COUNT(*) FROM votes WHERE proposal_id = ?;
 
 insertVotingToken:
-INSERT INTO voting_tokens(id, identity_id, proposal_id, token_hash, "used", created_at)
+INSERT INTO voting_tokens(id, identity_id, proposal_id, token_hash, used, created_at)
 VALUES (?, ?, ?, ?, ?, ?);
 
 markTokenAsUsed:
-UPDATE voting_tokens SET "used" = 1 WHERE token_hash = ?;
+UPDATE voting_tokens SET used = 1 WHERE token_hash = ?;
 
 getPendingSyncItems:
-SELECT * FROM sync_queue WHERE "status" = 'PENDING' ORDER BY created_at ASC;
+SELECT * FROM sync_queue WHERE status = 'PENDING' ORDER BY created_at ASC;
 
 updateSyncStatus:
-UPDATE sync_queue SET "status" = ? WHERE id = ?;
+UPDATE sync_queue SET status = ? WHERE id = ?;
 
 insertSyncItem:
-INSERT INTO sync_queue(id, "type", payload, "status", created_at)
+INSERT INTO sync_queue(id, type, payload, status, created_at)
 VALUES (?, ?, ?, ?, ?);

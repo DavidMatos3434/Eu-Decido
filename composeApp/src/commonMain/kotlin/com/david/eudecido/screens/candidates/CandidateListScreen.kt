@@ -12,18 +12,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.koin.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.david.eudecido.models.Candidate
+import org.koin.core.parameter.parametersOf
 
-class CandidateListScreen : Screen {
+class CandidateListScreen(val electionId: String) : Screen {
 
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val screenModel = rememberScreenModel { CandidateListScreenModel() }
+        // Usamos getScreenModel do Voyager-Koin para passar o electionId para o Factory do AppModule
+        val screenModel = getScreenModel<CandidateListScreenModel> { parametersOf(electionId) }
         val candidates by screenModel.candidates.collectAsState()
 
         CandidateListContent(
